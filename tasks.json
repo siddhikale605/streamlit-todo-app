@@ -1,0 +1,14 @@
+[
+    {
+        "task": "dinner",
+        "due_date": "2025-04-24",
+        "priority": "Low",
+        "done": false
+    },
+    {
+        "task": "lunch",
+        "due_date": "2025-04-24",
+        "priority": "Medium",
+        "done": false
+    }
+]

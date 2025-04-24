@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import json
 import pandas as pd
 import random
+import os
 
 # --- App config ---
 st.set_page_config(page_title="📱 To-Do App", layout="centered", initial_sidebar_state="collapsed")
@@ -50,8 +51,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Init ---
+TASK_FILE = "tasks.json"
+
+def load_tasks():
+    if os.path.exists(TASK_FILE):
+        with open(TASK_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_tasks():
+    with open(TASK_FILE, "w") as f:
+        json.dump(st.session_state.todos, f, indent=4)
+
 if "todos" not in st.session_state:
-    st.session_state.todos = []
+    st.session_state.todos = load_tasks()
 
 # --- Title & Header ---
 st.title("📱 To-Do App")
@@ -71,6 +84,7 @@ with st.form("add_task"):
                 "priority": priority,
                 "done": False
             })
+            save_tasks()
             st.success("Task added!")
         else:
             st.warning("Task cannot be empty.")
@@ -90,7 +104,9 @@ else:
 
         col1, col2, col3, col4 = st.columns([0.05, 0.5, 0.2, 0.25])
         done = col1.checkbox("", value=todo["done"], key=f"done_{i}")
-        st.session_state.todos[i]["done"] = done
+        if done != todo["done"]:
+            st.session_state.todos[i]["done"] = done
+            save_tasks()
 
         task_text = f"{'~~' if done else ''}{todo['task']} ({todo['priority']}) - Due: {todo['due_date']}{'~~' if done else ''}"
 
@@ -141,22 +157,18 @@ colA, colB, colC = st.columns(3)
 with colA:
     if st.button("🧹 Clear Completed"):
         st.session_state.todos = [t for t in st.session_state.todos if not t["done"]]
+        save_tasks()
         st.success("Cleared completed tasks.")
 
 with colB:
     if st.button("💾 Save to File"):
-        with open("tasks.json", "w") as f:
-            json.dump(st.session_state.todos, f, indent=4)
+        save_tasks()
         st.success("Tasks saved!")
 
 with colC:
     if st.button("📂 Load from File"):
-        try:
-            with open("tasks.json", "r") as f:
-                st.session_state.todos = json.load(f)
-            st.success("Tasks loaded!")
-        except:
-            st.error("No file found!")
+        st.session_state.todos = load_tasks()
+        st.success("Tasks loaded!")
 
 # --- Daily Motivation ---
 st.markdown("---")
